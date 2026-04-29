@@ -1,33 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Aleph en vivo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Poético - Gemini API</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        #resultado { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; min-height: 100px; }
+    </style>
 </head>
 <body>
 
-<h1>El Aleph (versi�n generativa)</h1>
-<button onclick="iniciar()">Ver el Aleph</button>
-<div id="salida"></div>
+    <h1>Generador de Poesía</h1>
+    <p>Ingresa tu API Key de Google AI Studio para usar la herramienta. La clave no se guarda en ningún lado, solo se usa en tu navegador.</p>
+    
+    <input type="password" id="apiKey" placeholder="Pega tu API Key aquí">
+    <button id="generarBtn">Generar Poema</button>
 
-<script>
-let intervalo;
+    <div id="resultado">Esperando instrucción...</div>
 
-async function generar() {
-  const res = await fetch("/api/aleph", { method: "POST" });
-  const data = await res.json();
+    <script type="module">
+        // Importamos la librería de Gemini directamente desde la web (CDN)
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-  const p = document.createElement("p");
-  p.textContent = data.texto;
+        document.getElementById('generarBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value;
+            const cajaResultado = document.getElementById('resultado');
 
-  document.getElementById("salida").prepend(p);
-}
+            if (!apiKey) {
+                alert("Por favor, ingresa tu API Key primero.");
+                return;
+            }
 
-function iniciar() {
-  clearInterval(intervalo);
-  intervalo = setInterval(generar, 2000);
-}
-</script>
+            cajaResultado.innerText = "Generando poema, por favor espera...";
 
+            try {
+                // 1. Inicializamos la IA con la clave que pusiste en el cuadro de texto
+                const genAI = new GoogleGenerativeAI(apiKey);
+                
+                // 2. Elegimos el modelo
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                // 3. Preparamos el prompt
+                const prompt = "Escribe un breve poema de dos estrofas sobre el mar, con un tono melancólico.";
+
+                // 4. Hacemos la llamada a la API
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                
+                // 5. Mostramos el resultado en pantalla
+                cajaResultado.innerText = response.text();
+
+            } catch (error) {
+                console.error(error);
+                cajaResultado.innerText = "Hubo un error: " + error.message;
+            }
+        });
+    </script>
 </body>
 </html>
