@@ -25,13 +25,16 @@ export default async function handler(req, res) {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: nombreModelo });
 
-        // --- EL NUEVO PROMPT BORGIANO ---
+        // --- EL NUEVO PROMPT BORGIANO (STACCATO) ---
         const prompt = `Actúa como Jorge Luis Borges describiendo lo que ve al asomarse al Aleph. 
-        Genera una única y breve visión (máximo dos líneas). 
+        Genera una única visión que tenga ESTRICTAMENTE entre 8 y 10 palabras en total. Ni una más, ni una menos. 
         La frase DEBE comenzar obligatoriamente con la palabra "Vi". 
-        Utiliza una sintaxis impecable, enumeraciones paradójicas y adjetivos precisos pero inusuales. 
-        Incorpora sutilmente elementos y símbolos de los cuentos de Borges: el tigre, laberintos, espejos que no reflejan, una brújula, un puñal de arrabal, el Zahir, hexágonos de una biblioteca infinita, la arena, un soñador soñado, monedas inabarcables o ruinas. 
-        Devuelve ÚNICAMENTE el texto de la visión, sin comillas ni explicaciones previas.`;
+        Utiliza imágenes y símbolos de los cuentos de Borges. Utiliza una sintaxis impecable, enumeraciones paradójicas y adjetivos precisos pero inusuales. 
+        El ritmo debe ser rápido y visual.
+        Evita adjetivación redundante y metáforas obvias.
+        No expliques ni comentes.
+        Escribe en español rioplatense neutro.
+        Devuelve ÚNICAMENTE la frase de 8 a 10 palabras, sin comillas, sin puntos suspensivos y sin explicaciones previas.`;
         
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim(); // .trim() quita espacios o saltos de línea sobrantes
