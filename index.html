@@ -20,8 +20,7 @@
 
     <div id="resultado">Esperando instrucción...</div>
 
-    <script type="module">
-        // Importamos la librería de Gemini directamente desde la web (CDN)
+<script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
         document.getElementById('generarBtn').addEventListener('click', async () => {
@@ -36,20 +35,18 @@
             cajaResultado.innerText = "Generando poema, por favor espera...";
 
             try {
-                // 1. Inicializamos la IA con la clave que pusiste en el cuadro de texto
                 const genAI = new GoogleGenerativeAI(apiKey);
                 
-                // 2. Elegimos el modelo
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                // SOLUCIÓN: Cambiamos a 'gemini-pro' que es el modelo más estable y compatible
+                // También puedes intentar con 'gemini-1.5-flash-latest'
+                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-                // 3. Preparamos el prompt
-                const prompt = "Escribe un breve poema de dos estrofas sobre el mar, con un tono melancólico.";
+                // Ajustamos el prompt para buscar un tono literario más profundo
+                const prompt = "Escribe un poema en prosa, de estilo muy minimalista, que observe con detenimiento la textura de los objetos cotidianos, como si el viento frío del Atlántico se filtrara por la ventana. Mantén un tono observacional y levemente melancólico.";
 
-                // 4. Hacemos la llamada a la API
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
                 
-                // 5. Mostramos el resultado en pantalla
                 cajaResultado.innerText = response.text();
 
             } catch (error) {
