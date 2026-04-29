@@ -32,21 +32,44 @@
                 return;
             }
 
-            cajaResultado.innerText = "Generando poema, por favor espera...";
+            cajaResultado.innerText = "Buscando modelos compatibles con tu API Key...";
 
             try {
-                const genAI = new GoogleGenerativeAI(apiKey);
+                // 1. Hacemos una llamada directa (REST) para ver qué modelos tienes disponibles
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                const modelosResponse = await fetch(url);
+                const modelosData = await modelosResponse.json();
+
+                if (!modelosData.models) {
+                    throw new Error("No se pudo obtener la lista de modelos. Verifica que tu API Key sea correcta.");
+                }
+
+                // 2. Filtramos la lista para encontrar el primer modelo que soporte la función "generateContent"
+                const modeloValido = modelosData.models.find(m => 
+                    m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")
+                );
+
+                if (!modeloValido) {
+                    throw new Error("Tu API Key no tiene acceso a ningún modelo de generación de texto.");
+                }
+
+                // La API devuelve el nombre como "models/nombre-del-modelo", le quitamos el prefijo "models/"
+                const nombreModelo = modeloValido.name.replace('models/', '');
                 
-                // SOLUCIÓN: Cambiamos a 'gemini-pro' que es el modelo más estable y compatible
-                // También puedes intentar con 'gemini-1.5-flash-latest'
-                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                cajaResultado.innerText = `¡Modelo encontrado! Usando: ${nombreModelo}\nGenerando poema...`;
 
-                // Ajustamos el prompt para buscar un tono literario más profundo
-                const prompt = "Escribe un poema en prosa, de estilo muy minimalista, que observe con detenimiento la textura de los objetos cotidianos, como si el viento frío del Atlántico se filtrara por la ventana. Mantén un tono observacional y levemente melancólico.";
+                // 3. Inicializamos la IA con el modelo dinámico que acabamos de encontrar
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: nombreModelo });
 
+                // 4. Preparamos la instrucción
+                const prompt = "Escribe un poema en prosa muy breve sobre el paso del tiempo y la tranquilidad.";
+
+                // 5. Solicitamos el contenido
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
                 
+                // 6. Mostramos el resultado
                 cajaResultado.innerText = response.text();
 
             } catch (error) {
@@ -54,6 +77,5 @@
                 cajaResultado.innerText = "Hubo un error: " + error.message;
             }
         });
-    </script>
-</body>
+    </script></body>
 </html>
