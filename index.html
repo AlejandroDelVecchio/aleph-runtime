@@ -3,96 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Aleph</title>
+    <title>El Aleph - Visión Continua</title>
     <style>
         body { 
-            font-family: "Georgia", serif; /* Una fuente más literaria */
-            max-width: 650px; 
-            margin: 50px auto; 
-            padding: 20px;
-            background-color: #fcfbf9;
-            color: #1a1a1a;
-            line-height: 1.6;
+            font-family: "Georgia", serif; 
+            max-width: 700px; 
+            margin: 0 auto; 
+            padding: 50px 20px;
+            background-color: #0a0a0a; /* Fondo oscuro para mayor inmersión */
+            color: #d4d4d4;
+            line-height: 1.8;
+            overflow-x: hidden;
         }
-        h1 { font-weight: normal; text-align: center; font-style: italic; }
+        h1 { 
+            font-weight: normal; 
+            text-align: center; 
+            font-style: italic; 
+            color: #888;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 50px;
+        }
+        .controles {
+            text-align: center;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
         button { 
-            display: block;
-            padding: 12px; 
-            margin: 20px auto; 
-            width: 50%; 
+            padding: 10px 25px; 
+            margin: 5px; 
             font-family: "Georgia", serif;
-            font-size: 16px; 
+            font-size: 14px; 
             cursor: pointer;
-            background-color: #1a1a1a;
-            color: #fff;
-            border: none;
-            border-radius: 3px;
+            background-color: transparent;
+            color: #888;
+            border: 1px solid #444;
+            transition: all 0.5s;
         }
-        button:hover { background-color: #333; }
-        #estado { text-align: center; font-style: italic; color: #666; height: 20px; margin-bottom: 20px;}
-        
-        /* El contenedor donde se irán apilando las visiones */
+        button:hover { border-color: #fff; color: #fff; }
+        button:disabled { opacity: 0.3; cursor: default; }
+
         #el-aleph { 
-            padding: 20px; 
-            border-left: 3px solid #ccc;
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+        
         .vision {
-            margin-bottom: 10px;
-            animation: aparecer 1s ease-in;
+            max-width: 500px;
+            margin-bottom: 40px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 2s ease-in-out;
         }
-        /* Un pequeño efecto para que el texto aparezca suavemente */
-        @keyframes aparecer {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        /* Cuando la visión está activa, se vuelve visible */
+        .vision.visible {
+            opacity: 1;
+            transform: scale(1);
         }
+
+        #estado { height: 20px; text-align: center; font-size: 12px; color: #555; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>El punto que contiene todos los puntos</h1>
+    <h1>EL ALEPH</h1>
     
-    <button id="mirarBtn">Mirar el Aleph</button>
-    <div id="estado"></div>
+    <div class="controles">
+        <button id="iniciarBtn">Iniciar Visión</button>
+        <button id="detenerBtn" disabled>Cerrar los ojos</button>
+        <div id="estado"></div>
+    </div>
 
-    <div id="el-aleph">
-        </div>
+    <div id="el-aleph"></div>
 
     <script>
-        document.getElementById('mirarBtn').addEventListener('click', async () => {
-            const estado = document.getElementById('estado');
-            const contenedorAleph = document.getElementById('el-aleph');
-            const boton = document.getElementById('mirarBtn');
+        let intervaloVisión;
+        const contenedorAleph = document.getElementById('el-aleph');
+        const iniciarBtn = document.getElementById('iniciarBtn');
+        const detenerBtn = document.getElementById('detenerBtn');
+        const estado = document.getElementById('estado');
 
-            estado.innerText = "Sintiendo el vértigo...";
-            boton.disabled = true; // Desactivamos el botón mientras carga
-
+        async function obtenerVision() {
             try {
-                const respuesta = await fetch('/api/aleph-runtime', { method: 'POST' });
+                const respuesta = await fetch('/api/poema', { method: 'POST' });
                 const datos = await respuesta.json();
 
                 if (respuesta.ok) {
-                    estado.innerText = "";
+                    const nuevoDiv = document.createElement('div');
+                    nuevoDiv.className = 'vision';
+                    nuevoDiv.innerText = datos.vision;
                     
-                    // En lugar de reemplazar el texto, creamos un nuevo párrafo
-                    const nuevoParrafo = document.createElement('p');
-                    nuevoParrafo.className = 'vision';
-                    nuevoParrafo.innerText = datos.vision;
+                    // Insertamos arriba para que las nuevas visiones aparezcan primero (opcional)
+                    // o usamos appendChild para que fluyan hacia abajo:
+                    contenedorAleph.appendChild(nuevoDiv);
                     
-                    // Lo agregamos al final del contenedor
-                    contenedorAleph.appendChild(nuevoParrafo);
-                    
-                    // Hacemos scroll hacia abajo automáticamente
-                    window.scrollTo(0, document.body.scrollHeight);
-                } else {
-                    estado.innerText = "Error al observar: " + datos.error;
-                }
+                    // Pequeño retraso para activar la animación de entrada
+                    setTimeout(() => nuevoDiv.classList.add('visible'), 100);
 
+                    // Auto-scroll suave
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
             } catch (error) {
-                console.error(error);
-                estado.innerText = "La visión se nubló. Hubo un error de conexión.";
-            } finally {
-                boton.disabled = false; // Volvemos a activar el botón
+                console.error("La visión se interrumpió:", error);
             }
+        }
+
+        iniciarBtn.addEventListener('click', () => {
+            iniciarBtn.disabled = true;
+            detenerBtn.disabled = false;
+            estado.innerText = "El infinito está ocurriendo...";
+            
+            // Ejecutar la primera de inmediato
+            obtenerVision();
+            
+            // Configurar el intervalo (cada 6 segundos para dar tiempo a leer)
+            intervaloVisión = setInterval(obtenerVision, 6000);
+        });
+
+        detenerBtn.addEventListener('click', () => {
+            clearInterval(intervaloVisión);
+            iniciarBtn.disabled = false;
+            detenerBtn.disabled = true;
+            estado.innerText = "La visión ha cesado.";
         });
     </script>
 </body>
