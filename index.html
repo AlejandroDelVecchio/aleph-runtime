@@ -67,7 +67,7 @@
             boton.disabled = true; // Desactivamos el botón mientras carga
 
             try {
-                const respuesta = await fetch('/api/poema', { method: 'POST' });
+                const respuesta = await fetch('/api/aleph-runtime', { method: 'POST' });
                 const datos = await respuesta.json();
 
                 if (respuesta.ok) {
