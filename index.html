@@ -3,43 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Poético</title>
+    <title>El Aleph</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; font-size: 16px; cursor: pointer;}
-        #resultado { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; min-height: 100px; }
+        body { 
+            font-family: "Georgia", serif; /* Una fuente más literaria */
+            max-width: 650px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background-color: #fcfbf9;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        h1 { font-weight: normal; text-align: center; font-style: italic; }
+        button { 
+            display: block;
+            padding: 12px; 
+            margin: 20px auto; 
+            width: 50%; 
+            font-family: "Georgia", serif;
+            font-size: 16px; 
+            cursor: pointer;
+            background-color: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+        }
+        button:hover { background-color: #333; }
+        #estado { text-align: center; font-style: italic; color: #666; height: 20px; margin-bottom: 20px;}
+        
+        /* El contenedor donde se irán apilando las visiones */
+        #el-aleph { 
+            padding: 20px; 
+            border-left: 3px solid #ccc;
+        }
+        .vision {
+            margin-bottom: 10px;
+            animation: aparecer 1s ease-in;
+        }
+        /* Un pequeño efecto para que el texto aparezca suavemente */
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Generador de Poesía</h1>
-    <p>Haz clic en el botón para generar un texto poético. La API Key está protegida en el servidor.</p>
+    <h1>El punto que contiene todos los puntos</h1>
     
-    <button id="generarBtn">Generar Poema</button>
-    <div id="resultado">Esperando instrucción...</div>
+    <button id="mirarBtn">Mirar el Aleph</button>
+    <div id="estado"></div>
+
+    <div id="el-aleph">
+        </div>
 
     <script>
-        document.getElementById('generarBtn').addEventListener('click', async () => {
-            const cajaResultado = document.getElementById('resultado');
-            cajaResultado.innerText = "Generando poema, por favor espera...";
+        document.getElementById('mirarBtn').addEventListener('click', async () => {
+            const estado = document.getElementById('estado');
+            const contenedorAleph = document.getElementById('el-aleph');
+            const boton = document.getElementById('mirarBtn');
+
+            estado.innerText = "Sintiendo el vértigo...";
+            boton.disabled = true; // Desactivamos el botón mientras carga
 
             try {
-                // Llamamos a la ruta de nuestro backend en Vercel
-                const respuesta = await fetch('/api/aleph-runtime', {
-                    method: 'POST'
-                });
-
+                const respuesta = await fetch('/api/poema', { method: 'POST' });
                 const datos = await respuesta.json();
 
                 if (respuesta.ok) {
-                    cajaResultado.innerText = datos.poema;
+                    estado.innerText = "";
+                    
+                    // En lugar de reemplazar el texto, creamos un nuevo párrafo
+                    const nuevoParrafo = document.createElement('p');
+                    nuevoParrafo.className = 'vision';
+                    nuevoParrafo.innerText = datos.vision;
+                    
+                    // Lo agregamos al final del contenedor
+                    contenedorAleph.appendChild(nuevoParrafo);
+                    
+                    // Hacemos scroll hacia abajo automáticamente
+                    window.scrollTo(0, document.body.scrollHeight);
                 } else {
-                    cajaResultado.innerText = "Error: " + datos.error;
+                    estado.innerText = "Error al observar: " + datos.error;
                 }
 
             } catch (error) {
                 console.error(error);
-                cajaResultado.innerText = "Hubo un error de conexión.";
+                estado.innerText = "La visión se nubló. Hubo un error de conexión.";
+            } finally {
+                boton.disabled = false; // Volvemos a activar el botón
             }
         });
     </script>
