@@ -80,57 +80,82 @@
     </div>
 
     <div id="el-aleph"></div>
-
-    <script>
+<script>
         let intervaloVisión;
+        let salaDeEspera = []; // Aquí guardaremos las 5 visiones que nos da la API
+        let pidiendoDatos = false; // Un seguro para no pedir datos a Google dos veces al mismo tiempo
+
         const contenedorAleph = document.getElementById('el-aleph');
         const iniciarBtn = document.getElementById('iniciarBtn');
         const detenerBtn = document.getElementById('detenerBtn');
         const estado = document.getElementById('estado');
 
-        async function obtenerVision() {
+        // Función que llama a Vercel/Google para llenar la sala de espera
+        async function reabastecerVisiones() {
+            pidiendoDatos = true;
             try {
-                const respuesta = await fetch('/api/aleph-runtime', { method: 'POST' });
+                const respuesta = await fetch('/api/poema', { method: 'POST' });
                 const datos = await respuesta.json();
 
-                if (respuesta.ok) {
-                    const nuevoDiv = document.createElement('div');
-                    nuevoDiv.className = 'vision';
-                    nuevoDiv.innerText = datos.vision;
-                    
-                    // Insertamos arriba para que las nuevas visiones aparezcan primero (opcional)
-                    // o usamos appendChild para que fluyan hacia abajo:
-                    contenedorAleph.appendChild(nuevoDiv);
-                    
-                    // Pequeño retraso para activar la animación de entrada
-                    setTimeout(() => nuevoDiv.classList.add('visible'), 100);
-
-                    // Auto-scroll suave
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                if (respuesta.ok && datos.visiones) {
+                    // Sumamos las nuevas visiones a las que ya estaban
+                    salaDeEspera = salaDeEspera.concat(datos.visiones);
+                } else {
+                    console.error("Error del servidor:", datos.error);
                 }
             } catch (error) {
-                console.error("La visión se interrumpió:", error);
+                console.error("Fallo de conexión al reabastecer:", error);
+            } finally {
+                pidiendoDatos = false;
             }
         }
 
-        iniciarBtn.addEventListener('click', () => {
+        // Función que toma una visión de la sala de espera y la muestra
+        async function proyectarSiguienteVision() {
+            // Si nos quedamos sin frases, pedimos más a la API de fondo sin detener el reloj
+            if (salaDeEspera.length <= 1 && !pidiendoDatos) {
+                reabastecerVisiones(); 
+            }
+
+            // Si por algún motivo la sala está vacía, no hacemos nada y esperamos al siguiente tick
+            if (salaDeEspera.length === 0) return;
+
+            // Sacamos la primera frase de la lista
+            const visionActual = salaDeEspera.shift();
+
+            // La dibujamos en la pantalla
+            const nuevoDiv = document.createElement('div');
+            nuevoDiv.className = 'vision';
+            nuevoDiv.innerText = visionActual;
+            contenedorAleph.appendChild(nuevoDiv);
+            
+            setTimeout(() => nuevoDiv.classList.add('visible'), 100);
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        iniciarBtn.addEventListener('click', async () => {
             iniciarBtn.disabled = true;
             detenerBtn.disabled = false;
             estado.innerText = "El infinito está ocurriendo...";
             
-            // Ejecutar la primera de inmediato
-            obtenerVision();
+            // 1. Pedimos el primer lote de 5 visiones
+            await reabastecerVisiones();
             
-            // Configurar el intervalo (cada 6 segundos para dar tiempo a leer)
-            intervaloVisión = setInterval(obtenerVision, 6000);
+            // 2. Mostramos la primera de inmediato
+            proyectarSiguienteVision();
+            
+            // 3. Iniciamos el reloj: mostrará una visión de la sala de espera cada 6 segundos
+            intervaloVisión = setInterval(proyectarSiguienteVision, 6000);
         });
 
         detenerBtn.addEventListener('click', () => {
             clearInterval(intervaloVisión);
             iniciarBtn.disabled = false;
             detenerBtn.disabled = true;
+            salaDeEspera = []; // Vaciamos la memoria
             estado.innerText = "La visión ha cesado.";
         });
     </script>
+
 </body>
 </html>
