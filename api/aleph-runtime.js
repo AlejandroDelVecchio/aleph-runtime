@@ -32,6 +32,7 @@ export default async function handler(req, res) {
         Utiliza imágenes y símbolos de los cuentos de Borges. Utiliza una sintaxis impecable, enumeraciones paradójicas y adjetivos precisos pero inusuales. 
         El ritmo debe ser rápido y visual.
         Evita adjetivación redundante y metáforas obvias.
+        Debes extraer las imágenes directamente de los cuentos y poemas de Borges. Por ejemplo: la rosa amarilla de Giambattista Marino, el compás, el astrolabio, los tigres transparentes, el disco de Odín, el mapa del Imperio del tamaño del Imperio, las ruinas circulares, las monedas de hierro, los hexágonos de la biblioteca, la espada de un sajón, un patio de arrabal en 1890, el rostro de Beatriz Viterbo.
         No expliques ni comentes.
         Escribe en español rioplatense neutro.
         Devuelve ÚNICAMENTE la frase de 8 a 10 palabras, sin comillas, sin puntos suspensivos y sin explicaciones previas.`;
