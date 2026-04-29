@@ -24,24 +24,23 @@ export default async function handler(req, res) {
         const nombreModelo = modeloValido.name.replace('models/', '');
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: nombreModelo });
-
-        // --- EL NUEVO PROMPT BORGIANO (STACCATO) ---
-        const prompt = `Actúa como Jorge Luis Borges describiendo lo que ve al asomarse al Aleph. 
-        Genera una única visión que tenga ESTRICTAMENTE entre 8 y 10 palabras en total. Ni una más, ni una menos. 
-        La frase DEBE comenzar obligatoriamente con la palabra "Vi". 
-        Utiliza imágenes y símbolos de los cuentos de Borges. Utiliza una sintaxis impecable, enumeraciones paradójicas y adjetivos precisos pero inusuales. 
-        El ritmo debe ser rápido y visual.
-        Evita adjetivación redundante y metáforas obvias.
-        Debes extraer las imágenes directamente de los cuentos y poemas de Borges. Por ejemplo: la rosa amarilla de Giambattista Marino, el compás, el astrolabio, los tigres transparentes, el disco de Odín, el mapa del Imperio del tamaño del Imperio, las ruinas circulares, las monedas de hierro, los hexágonos de la biblioteca, la espada de un sajón, un patio de arrabal en 1890, el rostro de Beatriz Viterbo.
-        No expliques ni comentes.
-        Escribe en español rioplatense neutro.
-        Devuelve ÚNICAMENTE la frase de 8 a 10 palabras, sin comillas, sin puntos suspensivos y sin explicaciones previas.`;
+        
+        // --- PROMPT DE LOTES (5 VISIONES A LA VEZ) ---
+        const prompt = `Actúa como Jorge Luis Borges describiendo el Aleph. 
+        Genera 5 visiones distintas. Cada visión debe tener ESTRICTAMENTE entre 8 y 10 palabras. 
+        Todas las visiones DEBEN comenzar obligatoriamente con la palabra "Vi". 
+        Extrae las imágenes de sus cuentos y poemas.
+        Devuelve ÚNICAMENTE las 5 frases, separadas por punto seguido. Sin comillas, sin números de lista y sin texto previo.`;
         
         const result = await model.generateContent(prompt);
-        const text = result.response.text().trim(); // .trim() quita espacios o saltos de línea sobrantes
+        const text = result.response.text().trim();
 
-        res.status(200).json({ vision: text });
+        // Convertimos el texto (separado por saltos de línea) en un arreglo de JavaScript
+        const visionesArray = text.split('\n').filter(linea => linea.trim() !== '');
 
+        // Devolvemos la lista completa
+        res.status(200).json({ visiones: visionesArray });
+        
     } catch (error) {
         console.error("Fallo detectado:", error.message);
         res.status(500).json({ error: error.message });
