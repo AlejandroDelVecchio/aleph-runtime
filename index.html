@@ -3,79 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Poético - Gemini API</title>
+    <title>Generador Poético</title>
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; font-size: 16px; cursor: pointer;}
         #resultado { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; min-height: 100px; }
     </style>
 </head>
 <body>
 
     <h1>Generador de Poesía</h1>
-    <p>Ingresa tu API Key de Google AI Studio para usar la herramienta. La clave no se guarda en ningún lado, solo se usa en tu navegador.</p>
+    <p>Haz clic en el botón para generar un texto poético. La API Key está protegida en el servidor.</p>
     
-    <input type="password" id="apiKey" placeholder="Pega tu API Key aquí">
     <button id="generarBtn">Generar Poema</button>
-
     <div id="resultado">Esperando instrucción...</div>
 
-<script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
+    <script>
         document.getElementById('generarBtn').addEventListener('click', async () => {
-            const apiKey = document.getElementById('apiKey').value;
             const cajaResultado = document.getElementById('resultado');
-
-            if (!apiKey) {
-                alert("Por favor, ingresa tu API Key primero.");
-                return;
-            }
-
-            cajaResultado.innerText = "Buscando modelos compatibles con tu API Key...";
+            cajaResultado.innerText = "Generando poema, por favor espera...";
 
             try {
-                // 1. Hacemos una llamada directa (REST) para ver qué modelos tienes disponibles
-                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-                const modelosResponse = await fetch(url);
-                const modelosData = await modelosResponse.json();
+                // Llamamos a la ruta de nuestro backend en Vercel
+                const respuesta = await fetch('/api/aleph-runtime', {
+                    method: 'POST'
+                });
 
-                if (!modelosData.models) {
-                    throw new Error("No se pudo obtener la lista de modelos. Verifica que tu API Key sea correcta.");
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    cajaResultado.innerText = datos.poema;
+                } else {
+                    cajaResultado.innerText = "Error: " + datos.error;
                 }
-
-                // 2. Filtramos la lista para encontrar el primer modelo que soporte la función "generateContent"
-                const modeloValido = modelosData.models.find(m => 
-                    m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")
-                );
-
-                if (!modeloValido) {
-                    throw new Error("Tu API Key no tiene acceso a ningún modelo de generación de texto.");
-                }
-
-                // La API devuelve el nombre como "models/nombre-del-modelo", le quitamos el prefijo "models/"
-                const nombreModelo = modeloValido.name.replace('models/', '');
-                
-                cajaResultado.innerText = `¡Modelo encontrado! Usando: ${nombreModelo}\nGenerando poema...`;
-
-                // 3. Inicializamos la IA con el modelo dinámico que acabamos de encontrar
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: nombreModelo });
-
-                // 4. Preparamos la instrucción
-                const prompt = "Escribe un poema en prosa muy breve sobre el paso del tiempo y la tranquilidad.";
-
-                // 5. Solicitamos el contenido
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                
-                // 6. Mostramos el resultado
-                cajaResultado.innerText = response.text();
 
             } catch (error) {
                 console.error(error);
-                cajaResultado.innerText = "Hubo un error: " + error.message;
+                cajaResultado.innerText = "Hubo un error de conexión.";
             }
         });
-    </script></body>
+    </script>
+</body>
 </html>
