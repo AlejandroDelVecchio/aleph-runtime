@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Aleph en vivo</title>
+</head>
+<body>
+
+<h1>El Aleph (versión generativa)</h1>
+<button onclick="iniciar()">Ver el Aleph</button>
+<div id="salida"></div>
+
+<script>
+let intervalo;
+
+async function generar() {
+  const res = await fetch("/api/aleph", { method: "POST" });
+  const data = await res.json();
+
+  const p = document.createElement("p");
+  p.textContent = data.texto;
+
+  document.getElementById("salida").prepend(p);
+}
+
+function iniciar() {
+  clearInterval(intervalo);
+  intervalo = setInterval(generar, 2000);
+}
+</script>
+
+</body>
+</html>
